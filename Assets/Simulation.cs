@@ -17,7 +17,7 @@ public class Simulation : MonoBehaviour
     public static float BOTTOM = Config.BOTTOM;
     public static float DAM = Config.DAM;
     public static int DAM_BREAK = Config.DAM_BREAK;
-    public static float G = Config.G;
+    public static float g = Config.g;
     public static float SPACING = Config.SPACING;
     public static float K = Config.K;
     public static float K_NEAR = Config.K_NEAR;

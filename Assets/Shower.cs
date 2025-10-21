@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using UnityEngine;
 
 using vector2 = UnityEngine.Vector2;
@@ -8,11 +9,14 @@ public class Shower : MonoBehaviour
 {
     // Get the Simulation object
     public GameObject Simulation;
+
     // Get the Base_Particle object from Scene
     public GameObject Base_Particle;
     public Vector2 init_speed = new Vector2(1.0f, 0.0f);
-    public float spawn_rate = 1f;
-    private float time;
+    public float spawn_rate = 100f;
+    private float time = 0f;
+    private static int N = Config.N;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -24,7 +28,7 @@ public class Shower : MonoBehaviour
     void Update()
     {
         // Limit the number of particles
-        if (Simulation.transform.childCount < 1000)
+        if (Simulation.transform.childCount < N)
         {
             // Spawn particles at a constant rate
             time += Time.deltaTime;

@@ -35,7 +35,7 @@ public class Particle : MonoBehaviour
     public static float BOTTOM = Config.BOTTOM;
     public static float DAM = Config.DAM;
     public static int DAM_BREAK = Config.DAM_BREAK;
-    public static float G = Config.G;
+    public static float g = Config.g;
     public static float SPACING = Config.SPACING;
     public static float K = Config.K;
     public static float K_NEAR = Config.K_NEAR;
@@ -49,6 +49,8 @@ public class Particle : MonoBehaviour
     public static float WALL_POS = Config.WALL_POS;
 
     // Physics variables
+    public static float mass = 0.001f;  // In kilograms
+    public static float GFM = 20f;      // Previous simulation relied on a misnomer "DT" which was of fixed value and did not relate to the time between computation. This General Force Multiplier (GFM) insures the existing methods built around this DT still work.
     public vector2 pos;
     public vector2 previous_pos;
     public vector2 visual_pos;
@@ -58,7 +60,7 @@ public class Particle : MonoBehaviour
     public float press_near = 0.0f;
     public list neighbours = new list();
     public vector2 vel = vector2.zero;
-    public vector2 force = new vector2(0f, -G);
+    public vector2 force = new vector2(0f, g * mass);
     public float velocity = 0.0f;
 
     // Spatial partitioning position in grid
@@ -79,21 +81,21 @@ public class Particle : MonoBehaviour
         // Reset previous position
         previous_pos = pos;
 
-        // Apply force using Newton's second law and Euler integration with mass = 1
-        vel += force * Time.deltaTime * DT;
+        // Apply force
+        vel += force * Time.deltaTime * GFM;
 
-        // Move particle according to its velocity using Euler integration
-        pos += vel * Time.deltaTime * DT;
+        // Move particle
+        pos += vel * Time.deltaTime * GFM;
 
         // Update visual position
         visual_pos = pos;
         transform.position = visual_pos;
 
         // Reset force
-        force = new vector2(0, -G);
+        force = new vector2(0f, g * mass);
 
-        // Define velocity using Euler integration
-        vel = (pos - previous_pos) / Time.deltaTime / DT;
+        // Define velocity
+        vel = (pos - previous_pos) / Time.deltaTime / GFM;
 
         // Calculate velocity
         velocity = vel.magnitude;
