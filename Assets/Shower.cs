@@ -32,7 +32,8 @@ public class Shower : MonoBehaviour
             {
                 return;
             }
-            // Create a new particle at the current position of the object
+
+            // Create new particles at the current position of the object
             GameObject new_particle = Instantiate(Base_Particle, transform.position, Quaternion.identity);
 
             // update the particle's position
