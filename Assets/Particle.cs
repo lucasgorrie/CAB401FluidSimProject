@@ -48,8 +48,8 @@ public class Particle : MonoBehaviour
     public static float WALL_POS = Config.WALL_POS;
 
     // Physics variables
-    public static float mass = 0.00001f;
-    public static float GFM = 70f;  // Previous simulation relied on a misnomer "DT" which was of fixed value and did not relate to the time between computation. This General Force Multiplier (GFM) insures the existing methods built around this DT still work.
+    public static float mass = 0.05f;
+    public static float GFM = 1f;  // Previous simulation relied on a misnomer "DT" which was of fixed value and did not relate to the time between computation. This General Force Multiplier (GFM) insures the existing methods built around this DT still work.
     public vector3 pos;
     public vector3 previous_pos;
     public vector3 visual_pos;

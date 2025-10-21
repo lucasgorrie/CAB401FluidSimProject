@@ -33,14 +33,14 @@ public class Simulation : MonoBehaviour
     public GameObject Base_Particle;
 
     // Spatial Partitioning Grid Variables
-    public int grid_size_x = 90;
-    public int grid_size_y = 90;
-    public int grid_size_z = 90;
+    public int grid_size_x = 20;
+    public int grid_size_y = 20;
+    public int grid_size_z = 20;
     public list[,,] grid;
     public float x_min = 1.0f;
     public float x_max = 12.7f;
     public float y_min = -5.1f;
-    public float y_max = 4f;
+    public float y_max = 5f;
     public float z_min = -2.7f;
     public float z_max = 2.5f;
 
