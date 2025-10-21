@@ -5,9 +5,9 @@ using UnityEngine;
 public class Config : MonoBehaviour
 {
     // Simulation parameters
-    public static int N = 1000;            // Number of particles
-    public static float SIM_W = 0.5f;      // Simulation space width
-    public static float BOTTOM = -2f;      // Simulation space ground
+    public static int N = 40000;           // Number of particles
+    public static float SIM_W = 6.7f;      // Simulation space width
+    public static float BOTTOM = -5.2f;    // Simulation space ground
     public static float DAM = -0.3f;       // Position of the dam, simulation space is between -0.5 and 0.5
     public static int DAM_BREAK = 200;     // Number of frames before the dam breaks
     public static float WALL_POS = 0.08f;  // Position adjustment for particles that are too close to the walls

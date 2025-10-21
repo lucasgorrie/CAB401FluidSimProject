@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using vector2 = UnityEngine.Vector2;
+using vector3 = UnityEngine.Vector3;
 using list = System.Collections.Generic.List<Particle>;
 
 using static Config;
@@ -45,27 +45,27 @@ public class Particle : MonoBehaviour
     public static float MAX_VEL = Config.MAX_VEL;
     public static float WALL_DAMP = Config.WALL_DAMP;
     public static float VEL_DAMP = Config.VEL_DAMP;
-    public static float DT = Config.DT;
     public static float WALL_POS = Config.WALL_POS;
 
     // Physics variables
-    public static float mass = 0.001f;  // In kilograms
-    public static float GFM = 20f;      // Previous simulation relied on a misnomer "DT" which was of fixed value and did not relate to the time between computation. This General Force Multiplier (GFM) insures the existing methods built around this DT still work.
-    public vector2 pos;
-    public vector2 previous_pos;
-    public vector2 visual_pos;
+    public static float mass = 0.00001f;
+    public static float GFM = 70f;  // Previous simulation relied on a misnomer "DT" which was of fixed value and did not relate to the time between computation. This General Force Multiplier (GFM) insures the existing methods built around this DT still work.
+    public vector3 pos;
+    public vector3 previous_pos;
+    public vector3 visual_pos;
     public float rho = 0.0f;
     public float rho_near = 0.0f;
     public float press = 0.0f;
     public float press_near = 0.0f;
     public list neighbours = new list();
-    public vector2 vel = vector2.zero;
-    public vector2 force = new vector2(0f, g * mass);
+    public vector3 vel = vector3.zero;
+    public vector3 force = new vector3(0f, g * mass, 0f);
     public float velocity = 0.0f;
 
     // Spatial partitioning position in grid
     public int grid_x;
     public int grid_y;
+    public int grid_z;
 
     void Start()
     {
@@ -92,7 +92,7 @@ public class Particle : MonoBehaviour
         transform.position = visual_pos;
 
         // Reset force
-        force = new vector2(0f, g * mass);
+        force = new vector3(0f, g * mass, 0f);
 
         // Define velocity
         vel = (pos - previous_pos) / Time.deltaTime / GFM;
@@ -130,13 +130,13 @@ public class Particle : MonoBehaviour
         press_near = K_NEAR * rho_near;
     }
 
-    void OnCollisionStay2D(Collision2D collision)
+    void OnCollisionStay(Collision collision)
     {
         // Calculate the normal vector of the collision
-        vector2 normal = collision.contacts[0].normal;
+        vector3 normal = collision.contacts[0].normal;
 
         // Calculate the velocity of the particle in the normal direction
-        float vel_normal = Vector2.Dot(vel, normal);
+        float vel_normal = Vector3.Dot(vel, normal);
 
         // If the velocity is positive, the particle is moving away from the wall
         if (vel_normal > 0)
@@ -145,7 +145,7 @@ public class Particle : MonoBehaviour
         }
 
         // Calculate the velocity of the particle in the tangent direction
-        vector2 vel_tangent = vel - normal * vel_normal;
+        vector3 vel_tangent = vel - normal * vel_normal;
 
         // Calculate the new velocity of the particle
         vel = vel_tangent - normal * vel_normal * WALL_DAMP;
