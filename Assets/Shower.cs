@@ -12,7 +12,7 @@ public class Shower : MonoBehaviour
 
     // Get the Base_Particle object from Scene
     public GameObject Base_Particle;
-    public Vector3 init_speed = new Vector3(0.0000003f, 0.0000001f, 0.0000001f);
+    public Vector3 init_speed = new Vector3(0f, 0f, 1f);
     public float spawn_rate = 40f;  // Aim to perform one spawn operation 40 times per second
     private float time = 0f;
     private static int N = Config.N;
@@ -38,19 +38,19 @@ public class Shower : MonoBehaviour
                 return;
             }
 
-            // Spawn 30 particles at a time
-            for (int i = 0; i < 30; i++) {
+            // Spawn 80 particles at a time
+            for (int i = 0; i < 80; i++) {
 
                 // Create new particles at the current position of the object
                 GameObject new_particle = Instantiate(Base_Particle, transform.position, Quaternion.identity);
 
                 Vector3 randomPos = new Vector3( (float) ( 1 - rng.NextDouble() * 2 ), (float) ( 1 - rng.NextDouble() * 2 ), (float) ( 1 - rng.NextDouble() * 2 ) );
-                randomPos = randomPos / 5;
+                randomPos = randomPos/2;
 
                 // update the particle's position
                 new_particle.GetComponent<Particle>().pos = new Vector3 ( transform.position.x + randomPos.x, transform.position.y + randomPos.y, transform.position.z + randomPos.z );
-                new_particle.GetComponent<Particle>().previous_pos = transform.position;
-                new_particle.GetComponent<Particle>().visual_pos = transform.position;
+                new_particle.GetComponent<Particle>().previous_pos = new Vector3(transform.position.x + randomPos.x, transform.position.y + randomPos.y, transform.position.z + randomPos.z);
+                new_particle.GetComponent<Particle>().visual_pos = new Vector3(transform.position.x + randomPos.x, transform.position.y + randomPos.y, transform.position.z + randomPos.z);
                 new_particle.GetComponent<Particle>().vel = init_speed;
 
                 // Set as child of the Simulation object

@@ -6,6 +6,7 @@ using vector3 = UnityEngine.Vector3;
 using list = System.Collections.Generic.List<Particle>;
 
 using static Config;
+using System;
 
 public class Particle : MonoBehaviour
 {
@@ -48,8 +49,8 @@ public class Particle : MonoBehaviour
     public static float WALL_POS = Config.WALL_POS;
 
     // Physics variables
-    public static float mass = 0.05f;
-    public static float GFM = 1f;  // Previous simulation relied on a misnomer "DT" which was of fixed value and did not relate to the time between computation. This General Force Multiplier (GFM) insures the existing methods built around this DT still work.
+    public static float mass = 0.5f;
+    public static float GFM = 2f;
     public vector3 pos;
     public vector3 previous_pos;
     public vector3 visual_pos;
@@ -132,6 +133,8 @@ public class Particle : MonoBehaviour
 
     void OnCollisionStay(Collision collision)
     {
+        if (collision.gameObject.tag == "Particle" ) return;  // Don't collide with other particles
+
         // Calculate the normal vector of the collision
         vector3 normal = collision.contacts[0].normal;
 

@@ -33,19 +33,26 @@ public class Simulation : MonoBehaviour
     public GameObject Base_Particle;
 
     // Spatial Partitioning Grid Variables
-    public int grid_size_x = 20;
-    public int grid_size_y = 20;
-    public int grid_size_z = 20;
     public list[,,] grid;
-    public float x_min = 1.0f;
-    public float x_max = 12.7f;
-    public float y_min = -5.1f;
-    public float y_max = 5f;
-    public float z_min = -2.7f;
-    public float z_max = 2.5f;
+    public float x_min = -8.5f;
+    public float x_max = 26.7f;
+    public float y_min = -7.1f;
+    public float y_max = 9f;
+    public float z_min = -18.5f;
+    public float z_max = 27.5f;
+
+    public int grid_size_x;
+    public int grid_size_y;
+    public int grid_size_z;
 
     void Start()
     {
+
+        // Set grid size so that it is roughly equal to 2*R
+        grid_size_x = (int) ((x_max - x_min) / (2 * R)) + 1;
+        grid_size_y = (int) ((y_max - y_min) / (2 * R)) + 1;
+        grid_size_z = (int) ((z_max - z_min) / (2 * R)) + 1;
+
         Base_Particle = GameObject.Find("Base_Particle");
 
         // Initialize spatial partitioning grid
