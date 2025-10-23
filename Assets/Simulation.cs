@@ -34,12 +34,12 @@ public class Simulation : MonoBehaviour
 
     // Spatial Partitioning Grid Variables
     public list[,,] grid;
-    public float x_min = -18.5f;
-    public float x_max = 40.7f;
-    public float y_min = -17.1f;
-    public float y_max = 14f;
-    public float z_min = -28.5f;
-    public float z_max = 37.5f;
+    public float x_min = -2.2f;
+    public float x_max = 6.7f;
+    public float y_min = -3.1f;
+    public float y_max = 5.8f;
+    public float z_min = -4.5f;
+    public float z_max = 9.5f;
 
     public int grid_size_x;
     public int grid_size_y;
@@ -76,7 +76,7 @@ public class Simulation : MonoBehaviour
     private float total_pressure;
     private float velocity_difference;
     private vector3 pressure_force;
-    private vector3 particule_to_neighbor;
+    private vector3 particle_to_neighbor;
     private vector3 pressure_vector;
     private vector3 normal_p_to_n;
     private vector3 viscosity_force;
@@ -155,12 +155,12 @@ public class Simulation : MonoBehaviour
 
             foreach (Particle n in p.neighbours)
             {
-                particule_to_neighbor = n.pos - p.pos;
+                particle_to_neighbor = n.pos - p.pos;
                 distance = Vector3.Distance(p.pos, n.pos);
 
                 normal_distance = 1 - distance / R;
                 total_pressure = (p.press + n.press) * normal_distance * normal_distance + (p.press_near + n.press_near) * normal_distance * normal_distance * normal_distance;
-                pressure_vector = total_pressure * particule_to_neighbor.normalized;
+                pressure_vector = total_pressure * particle_to_neighbor.normalized;
                 n.force += pressure_vector;
                 pressure_force += pressure_vector;
             }
@@ -182,9 +182,9 @@ public class Simulation : MonoBehaviour
         {
             foreach (Particle n in p.neighbours)
             {
-                particule_to_neighbor = n.pos - p.pos;
+                particle_to_neighbor = n.pos - p.pos;
                 distance = Vector3.Distance(p.pos, n.pos);
-                normal_p_to_n = particule_to_neighbor.normalized;
+                normal_p_to_n = particle_to_neighbor.normalized;
                 relative_distance = distance / R;
                 velocity_difference = Vector3.Dot(p.vel - n.vel, normal_p_to_n);
                 if (velocity_difference > 0)

@@ -5,27 +5,26 @@ using UnityEngine;
 public class Config : MonoBehaviour
 {
     // Simulation parameters
-    public static int N = 40000;            // Number of particles
-    public static float SIM_W = 30f;      // Simulation space width
-    public static float BOTTOM = -18f;    // Simulation space ground
+    public static int N = 10000;            // Number of particles
+    public static float SIM_W = 12f;      // Simulation space width
+    public static float BOTTOM = -68f;    // Simulation space ground
     public static float DAM = -0.3f;      // Position of the dam
     public static int DAM_BREAK = 200;    // Number of frames before the dam breaks
-    public static float WALL_POS = 0.5f;  // Position adjustment for particles that are too close to the walls
+    public static float WALL_POS = 0.00001f;  // Position adjustment for particles that are too close to the walls
 
     // Physics parameters
     public static float g = -9.81f;          // Acceleration of gravity
-    public static float SPACING = 3f;        // Spacing between particles, used to calculate pressure
-    public static float K = SPACING / 2.0f;  // Pressure factor
-    public static float K_NEAR = K / 2f;     // Near pressure factor, pressure when particles are close to each other
+    public static float SPACING = 0.8f;        // Spacing between particles, used to calculate pressure
+    public static float K = SPACING / 10000.0f;  // Pressure factor
+    public static float K_NEAR = K * 10f;     // Near pressure factor, pressure when particles are close to each other
 
-    // Default density, will be compared to local density to calculate pressure. This constant does nothing! why is it here!?!?!?!
-    public static float REST_DENSITY = 3f;
+    // Default density, will be compared to local density to calculate pressure.
+    public static float REST_DENSITY = 2f;
 
     // Neighbour radius, if the distance between two particles is less than R, they are neighbours
     public static float R = SPACING * 1.25f;
-    public static float SIGMA = 2f;         // Viscosity factor
-    public static float MAX_VEL = 25.25f;  // Maximum velocity of particles, used to avoid instability
-    public static float MIN_VEL = 0.01f;
+    public static float SIGMA = 5f;         // Viscosity factor
+    public static float MAX_VEL = 8.75f;  // Maximum velocity of particles, used to avoid instability
 
     // Wall constraints factor, how much the particle is pushed away from the simulation walls
     public static float WALL_DAMP = 0.95f;

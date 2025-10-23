@@ -7,6 +7,7 @@ using list = System.Collections.Generic.List<Particle>;
 
 using static Config;
 using System;
+using UnityEngine.UIElements;
 
 public class Particle : MonoBehaviour
 {
@@ -44,14 +45,13 @@ public class Particle : MonoBehaviour
     public static float R = Config.R;
     public static float SIGMA = Config.SIGMA;
     public static float MAX_VEL = Config.MAX_VEL;
-    public static float MIN_VEL = Config.MIN_VEL;
     public static float WALL_DAMP = Config.WALL_DAMP;
     public static float VEL_DAMP = Config.VEL_DAMP;
     public static float WALL_POS = Config.WALL_POS;
 
     // Physics variables
-    public static float mass = 0.001f;
-    public static float GFM = 200f;
+    public static float mass = 1f;
+    public static float GFM = 1f;
     public vector3 pos;
     public vector3 previous_pos;
     public vector3 visual_pos;
@@ -60,7 +60,7 @@ public class Particle : MonoBehaviour
     public float press = 0.0f;
     public float press_near = 0.0f;
     public list neighbours = new list();
-    public vector3 vel = vector3.zero;
+    public vector3 vel = new vector3(0f, 0f, 0f);
     public vector3 force = new vector3(0f, g * mass, 0f);
     public float velocity = 0.0f;
 
@@ -102,17 +102,6 @@ public class Particle : MonoBehaviour
         // Calculate velocity
         velocity = vel.magnitude;
 
-        // Set to MAX_VEL if velocity is greater than MAX_VEL
-        if (velocity > MAX_VEL)
-        {
-            vel = vel / 8;
-        }
-        // Set to 0 if velocity is lesser than MIN_VEL
-        if (velocity < MIN_VEL)
-        {
-            vel = vel / 8;
-        }
-
         // Reset density
         rho = 0.0f;
         rho_near = 0.0f;
@@ -129,6 +118,12 @@ public class Particle : MonoBehaviour
                 Destroy(gameObject);
             }
         }
+
+        if (velocity > MAX_VEL) vel = vel / (velocity / MAX_VEL);
+
+        vector3 camPos = new Vector3(12.55f, 0f, 1.55f);
+        transform.LookAt(camPos);
+
     }
 
     public void CalculatePressure()
