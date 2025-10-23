@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
-using System.Diagnostics;
 using UnityEngine;
 
 using vector3 = UnityEngine.Vector3;
@@ -16,7 +15,6 @@ public class Shower : MonoBehaviour
 
     // Profiling
     string statsText;
-    private PerformanceCounter cpuCounter;
 
     // Get the Simulation object
     public GameObject Simulation;
@@ -34,9 +32,6 @@ public class Shower : MonoBehaviour
     {
         Simulation = GameObject.Find("Simulation");
         Base_Particle = GameObject.Find("Base_Particle");
-
-        // Profiling
-        cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
     }
 
     // Update is called once per frame
