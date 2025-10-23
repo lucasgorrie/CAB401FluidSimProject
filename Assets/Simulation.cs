@@ -34,12 +34,12 @@ public class Simulation : MonoBehaviour
 
     // Spatial Partitioning Grid Variables
     public list[,,] grid;
-    public float x_min = -8.5f;
-    public float x_max = 26.7f;
-    public float y_min = -7.1f;
-    public float y_max = 9f;
-    public float z_min = -18.5f;
-    public float z_max = 27.5f;
+    public float x_min = -18.5f;
+    public float x_max = 40.7f;
+    public float y_min = -17.1f;
+    public float y_max = 14f;
+    public float z_min = -28.5f;
+    public float z_max = 37.5f;
 
     public int grid_size_x;
     public int grid_size_y;
@@ -49,9 +49,9 @@ public class Simulation : MonoBehaviour
     {
 
         // Set grid size so that it is roughly equal to 2*R
-        grid_size_x = (int) ((x_max - x_min) / (2 * R)) + 1;
-        grid_size_y = (int) ((y_max - y_min) / (2 * R)) + 1;
-        grid_size_z = (int) ((z_max - z_min) / (2 * R)) + 1;
+        grid_size_x = (int)((x_max - x_min) / (2 * R)) + 1;
+        grid_size_y = (int)((y_max - y_min) / (2 * R)) + 1;
+        grid_size_z = (int)((z_max - z_min) / (2 * R)) + 1;
 
         Base_Particle = GameObject.Find("Base_Particle");
 
@@ -59,7 +59,8 @@ public class Simulation : MonoBehaviour
         grid = new list[grid_size_x, grid_size_y, grid_size_z];
         for (int i = 0; i < grid_size_x; i++)
             for (int j = 0; j < grid_size_y; j++)
-                for (int k = 0; k < grid_size_z; k++) {
+                for (int k = 0; k < grid_size_z; k++)
+                {
                     grid[i, j, k] = new list();
                 }
 

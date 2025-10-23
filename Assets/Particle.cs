@@ -44,13 +44,14 @@ public class Particle : MonoBehaviour
     public static float R = Config.R;
     public static float SIGMA = Config.SIGMA;
     public static float MAX_VEL = Config.MAX_VEL;
+    public static float MIN_VEL = Config.MIN_VEL;
     public static float WALL_DAMP = Config.WALL_DAMP;
     public static float VEL_DAMP = Config.VEL_DAMP;
     public static float WALL_POS = Config.WALL_POS;
 
     // Physics variables
-    public static float mass = 0.5f;
-    public static float GFM = 2f;
+    public static float mass = 0.001f;
+    public static float GFM = 200f;
     public vector3 pos;
     public vector3 previous_pos;
     public vector3 visual_pos;
@@ -104,7 +105,12 @@ public class Particle : MonoBehaviour
         // Set to MAX_VEL if velocity is greater than MAX_VEL
         if (velocity > MAX_VEL)
         {
-            vel = vel.normalized * MAX_VEL;
+            vel = vel / 8;
+        }
+        // Set to 0 if velocity is lesser than MIN_VEL
+        if (velocity < MIN_VEL)
+        {
+            vel = vel / 8;
         }
 
         // Reset density
@@ -133,7 +139,7 @@ public class Particle : MonoBehaviour
 
     void OnCollisionStay(Collision collision)
     {
-        if (collision.gameObject.tag == "Particle" ) return;  // Don't collide with other particles
+        if (collision.gameObject.tag == "Particle") return;  // Don't collide with other particles
 
         // Calculate the normal vector of the collision
         vector3 normal = collision.contacts[0].normal;
