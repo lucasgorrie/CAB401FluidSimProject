@@ -50,8 +50,8 @@ public class Particle : MonoBehaviour
     public static float WALL_POS = Config.WALL_POS;
 
     // Physics variables
-    public static float mass = 1f;
-    public static float GFM = 1f;
+    public static float gfactor = 5f;
+    public static float GFM = 0.2f;
     public vector3 pos;
     public vector3 previous_pos;
     public vector3 visual_pos;
@@ -61,8 +61,9 @@ public class Particle : MonoBehaviour
     public float press_near = 0.0f;
     public list neighbours = new list();
     public vector3 vel = new vector3(0f, 0f, 0f);
-    public vector3 force = new vector3(0f, g * mass, 0f);
+    public vector3 force = new vector3(0f, g * gfactor, 0f);
     public float velocity = 0.0f;
+    public vector3 camPos = new Vector3(10.84f, 3.73f, 1.55f);
 
     // Spatial partitioning position in grid
     public int grid_x;
@@ -78,26 +79,25 @@ public class Particle : MonoBehaviour
     }
 
     // Update is called once per frame
-    public void UpdateState()
+    public void UpdateStateThreadSafe(float deltaTime)
     {
         // Reset previous position
         previous_pos = pos;
 
         // Apply force
-        vel += force * Time.deltaTime * GFM;
+        vel += force * deltaTime * GFM;
 
         // Move particle
-        pos += vel * Time.deltaTime * GFM;
+        pos += vel * deltaTime * GFM;
 
         // Update visual position
         visual_pos = pos;
-        transform.position = visual_pos;
 
         // Reset force
-        force = new vector3(0f, g * mass, 0f);
+        force = new vector3(0f, g * gfactor, 0f);
 
         // Define velocity
-        vel = (pos - previous_pos) / Time.deltaTime / GFM;
+        vel = (pos - previous_pos) / deltaTime / GFM;
 
         // Calculate velocity
         velocity = vel.magnitude;
@@ -109,6 +109,16 @@ public class Particle : MonoBehaviour
         // Reset neighbors
         neighbours = new list();
 
+        if (velocity > MAX_VEL) vel = vel / (velocity / MAX_VEL);
+
+    }
+
+    public void UpdateStateMainThread(){
+
+        transform.position = visual_pos;
+
+        transform.LookAt(camPos);
+
         // If pos under BOTTOM, delete particle
         if (pos.y < BOTTOM)
         {
@@ -118,11 +128,6 @@ public class Particle : MonoBehaviour
                 Destroy(gameObject);
             }
         }
-
-        if (velocity > MAX_VEL) vel = vel / (velocity / MAX_VEL);
-
-        vector3 camPos = new Vector3(12.55f, 0f, 1.55f);
-        transform.LookAt(camPos);
 
     }
 

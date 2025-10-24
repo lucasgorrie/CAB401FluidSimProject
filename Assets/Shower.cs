@@ -21,7 +21,7 @@ public class Shower : MonoBehaviour
 
     // Get the Base_Particle object from Scene
     public GameObject Base_Particle;
-    public float spawn_rate = 60f;  // Aim to perform one spawn operation 60 times per second
+    public float spawn_rate = 20f;  // Aim to perform one spawn operation 60 times per second
     private float time = 0f;
     private static int N = Config.N;
     private System.Random rng = new System.Random();
@@ -46,14 +46,14 @@ public class Shower : MonoBehaviour
                 return;
             }
 
-            // Spawn 30 particles at a time
-            for (int i = 0; i < 30; i++)
+            // Spawn 80 particles at a time
+            for (int i = 0; i < 80; i++)
             {
                 // Create new particles at the current position of the object
                 GameObject new_particle = Instantiate(Base_Particle, transform.position, Quaternion.identity);
 
                 Vector3 randomPos = new Vector3((float)(1 - rng.NextDouble() * 2), (float)(1 - rng.NextDouble() * 2), (float)(1 - rng.NextDouble() * 2));
-                randomPos = randomPos / 6;
+                randomPos = randomPos / 1.5f;
 
                 // update the particle's position
                 Vector3 position = new Vector3(transform.position.x + randomPos.x, transform.position.y + randomPos.y, transform.position.z + randomPos.z);

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 using list = System.Collections.Generic.List<Particle>;
@@ -48,10 +49,10 @@ public class Simulation : MonoBehaviour
     void Start()
     {
 
-        // Set grid size so that it is roughly equal to 2*R
-        grid_size_x = (int)((x_max - x_min) / (2 * R)) + 1;
-        grid_size_y = (int)((y_max - y_min) / (2 * R)) + 1;
-        grid_size_z = (int)((z_max - z_min) / (2 * R)) + 1;
+        // Set grid size so that it is roughly equal to R
+        grid_size_x = (int)((x_max - x_min) / R) + 1;
+        grid_size_y = (int)((y_max - y_min) / R) + 1;
+        grid_size_z = (int)((z_max - z_min) / R) + 1;
 
         Base_Particle = GameObject.Find("Base_Particle");
 
@@ -95,8 +96,7 @@ public class Simulation : MonoBehaviour
         */
 
         // For each particle
-        foreach (Particle p in particles)
-        {
+        Parallel.ForEach(particles, p => {
             density = 0.0f;
             density_near = 0.0f;
 
@@ -134,7 +134,7 @@ public class Simulation : MonoBehaviour
             }
             p.rho += density;
             p.rho_near += density_near;
-        }
+        });
     }
 
     public void create_pressure(list particles)
@@ -149,12 +149,11 @@ public class Simulation : MonoBehaviour
             particles (list[Particle]): list of particles
         */
 
-        foreach (Particle p in particles)
-        {
+        Parallel.ForEach(particles, p => {
             pressure_force = vector3.zero;
 
-            foreach (Particle n in p.neighbours)
-            {
+            foreach (Particle n in p.neighbours) {
+
                 particle_to_neighbor = n.pos - p.pos;
                 distance = Vector3.Distance(p.pos, n.pos);
 
@@ -163,9 +162,11 @@ public class Simulation : MonoBehaviour
                 pressure_vector = total_pressure * particle_to_neighbor.normalized;
                 n.force += pressure_vector;
                 pressure_force += pressure_vector;
+
             }
+
             p.force -= pressure_force;
-        }
+        });
     }
 
     public void calculate_viscosity(list particles)
@@ -178,23 +179,24 @@ public class Simulation : MonoBehaviour
         Args:
             particles (list[Particle]): list of particles
         */
-        foreach (Particle p in particles)
-        {
-            foreach (Particle n in p.neighbours)
-            {
+        Parallel.ForEach(particles, p => {
+            foreach (Particle n in p.neighbours) {
+
                 particle_to_neighbor = n.pos - p.pos;
                 distance = Vector3.Distance(p.pos, n.pos);
                 normal_p_to_n = particle_to_neighbor.normalized;
                 relative_distance = distance / R;
                 velocity_difference = Vector3.Dot(p.vel - n.vel, normal_p_to_n);
-                if (velocity_difference > 0)
-                {
+                
+                if (velocity_difference > 0) {
                     viscosity_force = (1 - relative_distance) * velocity_difference * SIGMA * normal_p_to_n;
                     p.vel -= viscosity_force * 0.5f;
                     n.vel += viscosity_force * 0.5f;
                 }
+
             }
-        }
+        });
+
     }
 
     // Update is called once per frame
@@ -220,8 +222,8 @@ public class Simulation : MonoBehaviour
                 }
             }
         }
-        foreach (Particle p in particles)
-        {
+
+        Parallel.ForEach ( particles, p => {
             // Assign grid_x and grid_y using x_min y_min x_max y_max
             p.grid_x = (int)((p.pos.x - x_min) / (x_max - x_min) * grid_size_x);
             p.grid_y = (int)((p.pos.y - y_min) / (y_max - y_min) * grid_size_y);
@@ -232,14 +234,22 @@ public class Simulation : MonoBehaviour
             {
                 grid[p.grid_x, p.grid_y, p.grid_z].Add(p);
             }
-        }
+        });
+
         time = Time.realtimeSinceStartup - time;
         //Debug.Log("Time to assign particles to grid: " + time);
 
         time = Time.realtimeSinceStartup;
-        foreach (Particle p in particles)
-        {
-            p.UpdateState();
+        
+        // Update what we can in a multi-threaded fashion //
+        float dt = Time.deltaTime;
+        Parallel.ForEach(particles, p => {
+            p.UpdateStateThreadSafe(dt);
+        });
+
+        // Get main thread to handle affine reads/writes on its own //
+        foreach (Particle p in particles) {
+            p.UpdateStateMainThread();
         }
 
         time = Time.realtimeSinceStartup - time;
@@ -251,10 +261,10 @@ public class Simulation : MonoBehaviour
         //Debug.Log("Time to calculate density: " + time);
 
         time = Time.realtimeSinceStartup;
-        foreach (Particle p in particles)
-        {
+        Parallel.ForEach(particles, p => {
             p.CalculatePressure();
-        }
+        });
+
         time = Time.realtimeSinceStartup - time;
         //Debug.Log("Time to calculate pressure: " + time);
 
