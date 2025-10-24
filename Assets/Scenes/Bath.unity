@@ -535,14 +535,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1021596805}
-  m_LocalRotation: {x: 0.08596737, y: -0.6845466, z: 0.102565564, w: 0.7165793}
-  m_LocalPosition: {x: 9.95, y: 3.24, z: 1.55}
+  m_LocalRotation: {x: 0.35940588, y: 0.0045249173, z: 0.012359461, w: 0.93308854}
+  m_LocalPosition: {x: 1.95, y: 4.76, z: -4.28}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 7
-  m_LocalEulerAnglesHint: {x: 15.285, y: -87.147, z: 1.74}
+  m_LocalEulerAnglesHint: {x: 42.114, y: 1.339, z: 2.033}
 --- !u!1 &1170507043 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8528866997666325970, guid: 6a38d5b2e274b4142bf1509b7e7fc5e9, type: 3}
@@ -662,6 +662,7 @@ MonoBehaviour:
   grid_size_x: 60
   grid_size_y: 30
   grid_size_z: 30
+  DoP: 15
 --- !u!1 &2061228353
 GameObject:
   m_ObjectHideFlags: 0
@@ -675,6 +676,7 @@ GameObject:
   - component: {fileID: 2061228362}
   - component: {fileID: 2061228358}
   - component: {fileID: 2061228366}
+  - component: {fileID: 2061228367}
   m_Layer: 4
   m_Name: Base_Particle
   m_TagString: Particle
@@ -689,9 +691,9 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2061228353}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.02716904, y: -0.9204244, z: -0.38451424, w: 0.065035775}
   m_LocalPosition: {x: 0.59, y: 1.83, z: 0.01205378}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1736716246}
@@ -805,6 +807,25 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1183024399 &2061228367
+LookAtConstraint:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2061228353}
+  m_Enabled: 1
+  m_Weight: 1
+  m_RotationAtRest: {x: 0, y: 0, z: 0}
+  m_RotationOffset: {x: 0, y: 0, z: 0}
+  m_Roll: 0
+  m_WorldUpObject: {fileID: 0}
+  m_UseUpObject: 0
+  m_IsContraintActive: 1
+  m_IsLocked: 1
+  m_Sources:
+  - sourceTransform: {fileID: 1021596809}
+    weight: 1
 --- !u!1 &2099384174
 GameObject:
   m_ObjectHideFlags: 0
@@ -863,19 +884,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2263994344409043715, guid: 64d7a3090a095f648aa49662d9484aba, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.3
+      value: 0.15
       objectReference: {fileID: 0}
     - target: {fileID: 2263994344409043715, guid: 64d7a3090a095f648aa49662d9484aba, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2263994344409043715, guid: 64d7a3090a095f648aa49662d9484aba, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 8
+      value: 3.2
       objectReference: {fileID: 0}
     - target: {fileID: 2263994344409043715, guid: 64d7a3090a095f648aa49662d9484aba, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2263994344409043715, guid: 64d7a3090a095f648aa49662d9484aba, type: 3}
       propertyPath: m_LocalRotation.w

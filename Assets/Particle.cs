@@ -63,7 +63,7 @@ public class Particle : MonoBehaviour
     public vector3 vel = new vector3(0f, 0f, 0f);
     public vector3 force = new vector3(0f, g * gfactor, 0f);
     public float velocity = 0.0f;
-    public vector3 camPos = new Vector3(10.84f, 3.73f, 1.55f);
+    public vector3 camPos = new Vector3(2.26f, 1.95f, -6.37f);
 
     // Spatial partitioning position in grid
     public int grid_x;

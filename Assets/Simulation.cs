@@ -7,6 +7,7 @@ using list = System.Collections.Generic.List<Particle>;
 using vector3 = UnityEngine.Vector3;
 
 using static Config;
+using Unity.VisualScripting;
 
 public class Simulation : MonoBehaviour
 {
@@ -36,15 +37,19 @@ public class Simulation : MonoBehaviour
     // Spatial Partitioning Grid Variables
     public list[,,] grid;
     public float x_min = -2.2f;
-    public float x_max = 6.7f;
-    public float y_min = -3.1f;
-    public float y_max = 5.8f;
-    public float z_min = -4.5f;
-    public float z_max = 9.5f;
+    public float x_max = 6.2f;
+    public float y_min = -3.2f;
+    public float y_max = 12.2f;
+    public float z_min = -4.2f;
+    public float z_max = 9.2f;
 
     public int grid_size_x;
     public int grid_size_y;
     public int grid_size_z;
+
+    // Parallelism modifiers
+    public int DoP = 15;  // Degree of Parallelism
+    public ParallelOptions configuration;
 
     void Start()
     {
@@ -64,6 +69,8 @@ public class Simulation : MonoBehaviour
                 {
                     grid[i, j, k] = new list();
                 }
+
+        configuration = new ParallelOptions { MaxDegreeOfParallelism = DoP };
 
     }
 
@@ -96,9 +103,7 @@ public class Simulation : MonoBehaviour
         */
 
         // For each particle
-        Parallel.ForEach(particles, p => {
-            density = 0.0f;
-            density_near = 0.0f;
+        Parallel.ForEach(particles, configuration, p => {
 
             // for each particle in the 9 neighboring cells in the spatial partitioning grid
             for (int i = p.grid_x - 1; i <= p.grid_x + 1; i++)
@@ -119,10 +124,8 @@ public class Simulation : MonoBehaviour
                                 if (dist < R)
                                 {
                                     normal_distance = 1 - dist / R;
-                                    p.rho += normal_distance * normal_distance;
-                                    p.rho_near += normal_distance * normal_distance * normal_distance;
-                                    n.rho += normal_distance * normal_distance;
-                                    n.rho_near += normal_distance * normal_distance * normal_distance;
+                                    p.rho += normal_distance * normal_distance * 2;
+                                    p.rho_near += normal_distance * normal_distance * normal_distance * 2;
 
                                     // Add n to p's neighbors for later use
                                     p.neighbours.Add(n);
@@ -132,8 +135,6 @@ public class Simulation : MonoBehaviour
                     }
                 }
             }
-            p.rho += density;
-            p.rho_near += density_near;
         });
     }
 
@@ -149,7 +150,7 @@ public class Simulation : MonoBehaviour
             particles (list[Particle]): list of particles
         */
 
-        Parallel.ForEach(particles, p => {
+        Parallel.ForEach(particles, configuration, p => {
             pressure_force = vector3.zero;
 
             foreach (Particle n in p.neighbours) {
@@ -179,7 +180,7 @@ public class Simulation : MonoBehaviour
         Args:
             particles (list[Particle]): list of particles
         */
-        Parallel.ForEach(particles, p => {
+        Parallel.ForEach(particles, configuration, p => {
             foreach (Particle n in p.neighbours) {
 
                 particle_to_neighbor = n.pos - p.pos;
@@ -223,7 +224,7 @@ public class Simulation : MonoBehaviour
             }
         }
 
-        Parallel.ForEach ( particles, p => {
+        Parallel.ForEach (particles, configuration, p => {
             // Assign grid_x and grid_y using x_min y_min x_max y_max
             p.grid_x = (int)((p.pos.x - x_min) / (x_max - x_min) * grid_size_x);
             p.grid_y = (int)((p.pos.y - y_min) / (y_max - y_min) * grid_size_y);
@@ -243,7 +244,7 @@ public class Simulation : MonoBehaviour
         
         // Update what we can in a multi-threaded fashion //
         float dt = Time.deltaTime;
-        Parallel.ForEach(particles, p => {
+        Parallel.ForEach(particles, configuration, p => {
             p.UpdateStateThreadSafe(dt);
         });
 
@@ -261,7 +262,7 @@ public class Simulation : MonoBehaviour
         //Debug.Log("Time to calculate density: " + time);
 
         time = Time.realtimeSinceStartup;
-        Parallel.ForEach(particles, p => {
+        Parallel.ForEach(particles, configuration, p => {
             p.CalculatePressure();
         });
 
