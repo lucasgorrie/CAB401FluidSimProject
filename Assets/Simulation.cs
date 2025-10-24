@@ -119,7 +119,7 @@ public class Simulation : MonoBehaviour
                             foreach (Particle n in grid[i, j, k])
                             {
                                 // Calculate distance between particles
-                                dist = Vector3.Distance(p.pos, n.pos);
+                                dist = Vector3.Distance(p.pos, n.predicted_pos);
 
                                 if (dist < R)
                                 {
@@ -155,8 +155,8 @@ public class Simulation : MonoBehaviour
 
             foreach (Particle n in p.neighbours) {
 
-                particle_to_neighbor = n.pos - p.pos;
-                distance = Vector3.Distance(p.pos, n.pos);
+                particle_to_neighbor = n.predicted_pos - p.pos;
+                distance = Vector3.Distance(p.pos, n.predicted_pos);
 
                 normal_distance = 1 - distance / R;
                 total_pressure = (p.press + n.press) * normal_distance * normal_distance + (p.press_near + n.press_near) * normal_distance * normal_distance * normal_distance;
@@ -183,8 +183,8 @@ public class Simulation : MonoBehaviour
         Parallel.ForEach(particles, configuration, p => {
             foreach (Particle n in p.neighbours) {
 
-                particle_to_neighbor = n.pos - p.pos;
-                distance = Vector3.Distance(p.pos, n.pos);
+                particle_to_neighbor = n.predicted_pos - p.pos;
+                distance = Vector3.Distance(p.pos, n.predicted_pos);
                 normal_p_to_n = particle_to_neighbor.normalized;
                 relative_distance = distance / R;
                 velocity_difference = Vector3.Dot(p.vel - n.vel, normal_p_to_n);

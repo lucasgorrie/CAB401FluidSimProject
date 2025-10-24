@@ -50,8 +50,9 @@ public class Particle : MonoBehaviour
     public static float WALL_POS = Config.WALL_POS;
 
     // Physics variables
-    public static float gfactor = 5f;
-    public static float GFM = 0.2f;
+    public static float gfactor = 0.1f;
+    public static float GFM = 2f;
+    public vector3 predicted_pos;
     public vector3 pos;
     public vector3 previous_pos;
     public vector3 visual_pos;
@@ -89,6 +90,7 @@ public class Particle : MonoBehaviour
 
         // Move particle
         pos += vel * deltaTime * GFM;
+        predicted_pos = pos + vel * deltaTime * GFM;
 
         // Update visual position
         visual_pos = pos;
@@ -116,6 +118,8 @@ public class Particle : MonoBehaviour
     public void UpdateStateMainThread(){
 
         transform.position = visual_pos;
+        float scale = (visual_pos.y + 3) / 30f;
+        transform.localScale = new vector3 (scale, scale, scale);
 
         transform.LookAt(camPos);
 
