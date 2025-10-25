@@ -115,7 +115,7 @@ public class Particle : MonoBehaviour
 
     }
 
-    public void UpdateStateMainThread(){
+    public void UpdateStateAffine(){
 
         transform.position = visual_pos;
         float scale = (visual_pos.y + 3) / 30f;

@@ -250,7 +250,7 @@ public class Simulation : MonoBehaviour
 
         // Get main thread to handle affine reads/writes on its own //
         foreach (Particle p in particles) {
-            p.UpdateStateMainThread();
+            p.UpdateStateAffine();
         }
 
         time = Time.realtimeSinceStartup - time;
