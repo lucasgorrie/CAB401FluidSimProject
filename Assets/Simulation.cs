@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System;
+using System.Linq;
 using UnityEngine;
 
 using list = System.Collections.Generic.List<Particle>;
@@ -35,7 +37,6 @@ public class Simulation : MonoBehaviour
     public GameObject Base_Particle;
 
     // Spatial Partitioning Grid Variables
-    public list[,,] grid;
     public float x_min = -2.2f;
     public float x_max = 6.2f;
     public float y_min = -3.2f;
@@ -46,6 +47,22 @@ public class Simulation : MonoBehaviour
     public int grid_size_x;
     public int grid_size_y;
     public int grid_size_z;
+
+    // Hashing constants //
+    public int H0 = 20993;
+    public int H1 = 10222333;
+    public int H2 = 311815536;
+
+    // GPU-safe arrays for indices and offsets //
+    public uint[] keys;
+    public uint[] CellParticleCounts;
+    public uint[] Offsets;
+
+    // GPU-safe arrays for buffer communication //
+    public float[] rhos; public float[] rhos_near;
+    public float[] pressures; public float[] pressures_near;
+    public vector3[] predicted_positions; public vector3[] velocities;
+    public vector3[] forces;
 
     // Parallelism modifiers
     public int DoP = 15;  // Degree of Parallelism
@@ -58,39 +75,30 @@ public class Simulation : MonoBehaviour
         grid_size_x = (int)((x_max - x_min) / R) + 1;
         grid_size_y = (int)((y_max - y_min) / R) + 1;
         grid_size_z = (int)((z_max - z_min) / R) + 1;
+        
+        CellParticleCounts = new uint[(uint)(grid_size_x * grid_size_y * grid_size_z)];
+        Offsets = new uint[(uint)(grid_size_x * grid_size_y * grid_size_z)];
 
         Base_Particle = GameObject.Find("Base_Particle");
-
-        // Initialize spatial partitioning grid
-        grid = new list[grid_size_x, grid_size_y, grid_size_z];
-        for (int i = 0; i < grid_size_x; i++)
-            for (int j = 0; j < grid_size_y; j++)
-                for (int k = 0; k < grid_size_z; k++)
-                {
-                    grid[i, j, k] = new list();
-                }
 
         configuration = new ParallelOptions { MaxDegreeOfParallelism = DoP };
 
     }
 
-    // Utility variables
-    private float density;
-    private float density_near;
-    private float dist;
-    private float distance;
-    private float normal_distance;
-    private float relative_distance;
-    private float total_pressure;
-    private float velocity_difference;
-    private vector3 pressure_force;
-    private vector3 particle_to_neighbor;
-    private vector3 pressure_vector;
-    private vector3 normal_p_to_n;
-    private vector3 viscosity_force;
+    public void UpdateBuffers() {
+
+        int M = particles.Count;
+        keys = new uint[M];
+        rhos = new float[M]; rhos_near = new float[M];
+        pressures = new float[M]; pressures_near = new float[M];
+        predicted_positions = new vector3[M]; velocities = new vector3[M];
+        forces = new vector3[M];
+
+    }
+
     private float time;
 
-    public void calculate_density(list particles)
+    public void calculate_density()
     {
         /*
             Calculates density of particles
@@ -103,42 +111,50 @@ public class Simulation : MonoBehaviour
         */
 
         // For each particle
-        Parallel.ForEach(particles, configuration, p => {
+        for(int p = 0; p < particles.Count; p++) {
+
+            vector3 Cell = GetGrid(predicted_positions[p]);
 
             // for each particle in the 9 neighboring cells in the spatial partitioning grid
-            for (int i = p.grid_x - 1; i <= p.grid_x + 1; i++)
+            for (int i = (int) Cell.x - 1; i <= Cell.x + 1; i++)
             {
-                for (int j = p.grid_y - 1; j <= p.grid_y + 1; j++)
+                for (int j = (int) Cell.y - 1; j <= Cell.y + 1; j++)
                 {
-                    for (int k = p.grid_z - 1; k <= p.grid_z + 1; k++)
+                    for (int k = (int) Cell.z - 1; k <= Cell.z + 1; k++)
                     {
                         // If the cell is in the grid
                         if (i >= 0 && i < grid_size_x && j >= 0 && j < grid_size_y && k >= 0 && k < grid_size_z)
                         {
-                            // For each particle in the cell
-                            foreach (Particle n in grid[i, j, k])
+
+                            vector3 gridOffset = new vector3(i - Cell.x, j - Cell.y, k - Cell.z);  // Neighbour cell relative to particle cell
+                            uint hash = HashGrid(Cell + gridOffset);  // Hash of grid to look at for neighbour
+                            uint key = KeyFromHash(hash);
+
+                            // For each neighbour
+                            for (uint q = Offsets[key]; q < ( Offsets[key] + CellParticleCounts[key] ); q++)
                             {
+
+                                uint nKey = keys[q];
+                                if (nKey != key) break;
+
                                 // Calculate distance between particles
-                                dist = Vector3.Distance(p.pos, n.predicted_pos);
+                                float dist = Vector3.Distance(predicted_positions[p], predicted_positions[q]);
 
                                 if (dist < R)
                                 {
-                                    normal_distance = 1 - dist / R;
-                                    p.rho += normal_distance * normal_distance * 2;
-                                    p.rho_near += normal_distance * normal_distance * normal_distance * 2;
-
-                                    // Add n to p's neighbors for later use
-                                    p.neighbours.Add(n);
+                                    float normal_distance = 1 - dist / R;
+                                    rhos[p] += normal_distance * normal_distance * 2;
+                                    rhos_near[p] += normal_distance * normal_distance * normal_distance * 2;
                                 }
                             }
                         }
                     }
                 }
             }
-        });
+        }
     }
 
-    public void create_pressure(list particles)
+    public void create_pressure()
     {
         /*
             Calculates pressure force of particles
@@ -150,27 +166,50 @@ public class Simulation : MonoBehaviour
             particles (list[Particle]): list of particles
         */
 
-        Parallel.ForEach(particles, configuration, p => {
-            pressure_force = vector3.zero;
+        for(int p = 0; p < particles.Count; p++) {
 
-            foreach (Particle n in p.neighbours) {
+            vector3 pressure_force = vector3.zero;
+            vector3 Cell = GetGrid(predicted_positions[p]);
 
-                particle_to_neighbor = n.predicted_pos - p.pos;
-                distance = Vector3.Distance(p.pos, n.predicted_pos);
+            // for each particle in the 9 neighboring cells in the spatial partitioning grid
+            for (int i = (int)Cell.x - 1; i <= Cell.x + 1; i++)
+            {
+                for (int j = (int)Cell.y - 1; j <= Cell.y + 1; j++)
+                {
+                    for (int k = (int)Cell.z - 1; k <= Cell.z + 1; k++)
+                    {
+                        // If the cell is in the grid
+                        if (i >= 0 && i < grid_size_x && j >= 0 && j < grid_size_y && k >= 0 && k < grid_size_z)
+                        {
 
-                normal_distance = 1 - distance / R;
-                total_pressure = (p.press + n.press) * normal_distance * normal_distance + (p.press_near + n.press_near) * normal_distance * normal_distance * normal_distance;
-                pressure_vector = total_pressure * particle_to_neighbor.normalized;
-                n.force += pressure_vector;
-                pressure_force += pressure_vector;
+                            vector3 gridOffset = new vector3(i - Cell.x, j - Cell.y, k - Cell.z);  // Neighbour cell relative to particle cell
+                            uint hash = HashGrid(Cell + gridOffset);  // Hash of grid to look at for neighbour
+                            uint key = KeyFromHash(hash);
 
+                            // For each neighbour
+                            for (uint q = Offsets[key]; q < (Offsets[key] + CellParticleCounts[key]); q++)
+                            {
+
+                                vector3 particle_to_neighbor = predicted_positions[q] - predicted_positions[p];
+                                float distance = Vector3.Distance(predicted_positions[p], predicted_positions[q]);
+
+                                float normal_distance = 1 - distance / R;
+                                float total_pressure = (pressures[p] + pressures[q]) * normal_distance * normal_distance + (pressures_near[p] + pressures_near[q]) * normal_distance * normal_distance * normal_distance;
+                                vector3 pressure_vector = total_pressure * particle_to_neighbor.normalized;
+                                forces[q] += pressure_vector;
+                                pressure_force += pressure_vector;
+                            }
+                        }
+                    }
+                }
             }
 
-            p.force -= pressure_force;
-        });
+            forces[p] -= pressure_force;
+
+        }
     }
 
-    public void calculate_viscosity(list particles)
+    public void calculate_viscosity()
     {
         /*
         Calculates the viscosity force of particles
@@ -180,23 +219,47 @@ public class Simulation : MonoBehaviour
         Args:
             particles (list[Particle]): list of particles
         */
-        Parallel.ForEach(particles, configuration, p => {
-            foreach (Particle n in p.neighbours) {
+        for (int p = 0; p < particles.Count; p++) {
+            vector3 Cell = GetGrid(predicted_positions[p]);
 
-                particle_to_neighbor = n.predicted_pos - p.pos;
-                distance = Vector3.Distance(p.pos, n.predicted_pos);
-                normal_p_to_n = particle_to_neighbor.normalized;
-                relative_distance = distance / R;
-                velocity_difference = Vector3.Dot(p.vel - n.vel, normal_p_to_n);
-                
-                if (velocity_difference > 0) {
-                    viscosity_force = (1 - relative_distance) * velocity_difference * SIGMA * normal_p_to_n;
-                    p.vel -= viscosity_force * 0.5f;
-                    n.vel += viscosity_force * 0.5f;
+            // for each particle in the 9 neighboring cells in the spatial partitioning grid
+            for (int i = (int)Cell.x - 1; i <= Cell.x + 1; i++)
+            {
+                for (int j = (int)Cell.y - 1; j <= Cell.y + 1; j++)
+                {
+                    for (int k = (int)Cell.z - 1; k <= Cell.z + 1; k++)
+                    {
+                        // If the cell is in the grid
+                        if (i >= 0 && i < grid_size_x && j >= 0 && j < grid_size_y && k >= 0 && k < grid_size_z)
+                        {
+
+                            vector3 gridOffset = new vector3(i - Cell.x, j - Cell.y, k - Cell.z);  // Neighbour cell relative to particle cell
+                            uint hash = HashGrid(Cell + gridOffset);  // Hash of grid to look at for neighbour
+                            uint key = KeyFromHash(hash);
+
+                            // For each neighbour
+                            for (uint q = Offsets[key]; q < (Offsets[key] + CellParticleCounts[key]); q++)
+                            {
+
+                                vector3 particle_to_neighbor = predicted_positions[q] - predicted_positions[p];
+                                float distance = Vector3.Distance(predicted_positions[p], predicted_positions[q]);
+                                vector3 normal_p_to_q = particle_to_neighbor.normalized;
+                                float relative_distance = distance / R;
+                                float velocity_difference = Vector3.Dot(velocities[p] - velocities[q], normal_p_to_q);
+
+                                if (velocity_difference > 0)
+                                {
+                                    vector3 viscosity_force = (1 - relative_distance) * velocity_difference * SIGMA * normal_p_to_q;
+                                    velocities[p] -= viscosity_force * 0.5f;
+                                    velocities[q] += viscosity_force * 0.5f;
+                                }
+                            }
+                        }
+                    }
                 }
 
             }
-        });
+        }
 
     }
 
@@ -211,32 +274,7 @@ public class Simulation : MonoBehaviour
         {
             particles.Add(child.GetComponent<Particle>());
         }
-
-        // Assign particles to spatial partitioning grid
-        for (int i = 0; i < grid_size_x; i++)
-        {
-            for (int j = 0; j < grid_size_y; j++)
-            {
-                for (int k = 0; k < grid_size_z; k++)
-                {
-                    grid[i, j, k].Clear();
-                }
-            }
-        }
-
-        Parallel.ForEach (particles, configuration, p => {
-            // Assign grid_x and grid_y using x_min y_min x_max y_max
-            p.grid_x = (int)((p.pos.x - x_min) / (x_max - x_min) * grid_size_x);
-            p.grid_y = (int)((p.pos.y - y_min) / (y_max - y_min) * grid_size_y);
-            p.grid_z = (int)((p.pos.z - z_min) / (z_max - z_min) * grid_size_z);
-
-            // Add particle to grid if it is within bounds
-            if (p.grid_x >= 0 && p.grid_x < grid_size_x && p.grid_y >= 0 && p.grid_y < grid_size_y && p.grid_z >= 0 && p.grid_z < grid_size_z)
-            {
-                grid[p.grid_x, p.grid_y, p.grid_z].Add(p);
-            }
-        });
-
+        
         time = Time.realtimeSinceStartup - time;
         //Debug.Log("Time to assign particles to grid: " + time);
 
@@ -256,8 +294,12 @@ public class Simulation : MonoBehaviour
         time = Time.realtimeSinceStartup - time;
         //Debug.Log("Time to update particles: " + time);
 
+        UpdateBuffers();
+        AddParticleDetails();
+        UpdateHashTable();
+
         time = Time.realtimeSinceStartup;
-        calculate_density(particles);
+        calculate_density();
         time = Time.realtimeSinceStartup - time;
         //Debug.Log("Time to calculate density: " + time);
 
@@ -270,13 +312,104 @@ public class Simulation : MonoBehaviour
         //Debug.Log("Time to calculate pressure: " + time);
 
         time = Time.realtimeSinceStartup;
-        create_pressure(particles);
+        create_pressure();
         time = Time.realtimeSinceStartup - time;
         //Debug.Log("Time to create pressure: " + time);
 
         time = Time.realtimeSinceStartup;
-        calculate_viscosity(particles);
+        calculate_viscosity();
         time = Time.realtimeSinceStartup - time;
         //Debug.Log("Time to calculate viscosity: " + time);
+        AddResultsToParticles();
+
     }
+
+    // Get grid coordinate from position vector //
+    vector3 GetGrid(vector3 position) {
+        return new vector3 ( (int)((position.x - x_min) / R), (int)((position.y - y_min) / R), (int)((position.z - z_min) / R) );
+    }
+
+    // Get key for particle from its hash //
+    uint KeyFromHash(uint hash) {
+        return hash % (uint)(grid_size_x * grid_size_y * grid_size_z);
+    }
+
+    // Hash grid coordinate //
+    uint HashGrid(vector3 grid) {
+        return ( (uint) grid.x * (uint) H0 ) + ( (uint) grid.y * (uint) H1 ) + ( (uint) grid.z * (uint) H2 );
+    }
+
+    // Update our lookup tables with a base offset and an index/hash/key triplet
+    void UpdateHashTable() {
+
+        // Loop over particles to map them to a cell hash
+        for (uint i = 0; i < particles.Count; i++) {
+
+            vector3 gridPoint = GetGrid(particles[(int)i].predicted_pos);
+
+            uint hash = HashGrid(gridPoint);
+            uint Key = KeyFromHash(hash);
+            keys[i] = Key;
+
+        }
+
+        // Sort particles by grid key
+        Particle[] particlesArray = particles.ToArray();
+        Array.Sort(keys, particlesArray);
+        particles = particlesArray.ToList();
+        //Array.Sort(keys);
+
+        // Loop over keys to record number of particles in each cell and offsets
+        CellParticleCounts = new uint[(uint)(grid_size_x * grid_size_y * grid_size_z)];
+        Offsets = new uint[(uint)(grid_size_x * grid_size_y * grid_size_z)];
+        uint key = keys[0];
+        uint startIndex = 0;
+        uint count = 1;
+        for (uint i = 1; i < particles.Count; i++) {
+
+            if (keys[i] == key) { count++; continue; }
+
+            CellParticleCounts[key] = count;
+            Offsets[key] = startIndex;
+            key = keys[i];
+            startIndex = i;
+            count = 1;
+        
+        }
+
+        CellParticleCounts[key] = count;
+        Offsets[key] = startIndex;
+
+    }
+
+    // Should be performed after considerations //
+    void AddResultsToParticles() {
+
+        for (int i = 0; i < particles.Count; i++) {
+            particles[i].rho = rhos[i];
+            particles[i].rho_near = rhos_near[i];
+            particles[i].press = pressures[i];
+            particles[i].press_near = pressures_near[i];
+            particles[i].vel = velocities[i];
+            particles[i].force = forces[i];
+            particles[i].predicted_pos = predicted_positions[i];
+        }
+    
+    }
+
+    // Should be performed before considerations //
+    void AddParticleDetails() {
+
+        for (int i = 0; i < particles.Count; i++) {
+            rhos[i] = particles[i].rho;
+            rhos_near[i] = particles[i].rho_near;
+            pressures[i] = particles[i].press;
+            pressures_near[i] = particles[i].press_near;
+            velocities[i] = particles[i].vel;
+            forces[i] = particles[i].force;
+            predicted_positions[i] = particles[i].predicted_pos;
+        }
+
+    }
+
 }

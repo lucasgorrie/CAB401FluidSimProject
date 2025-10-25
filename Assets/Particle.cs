@@ -60,16 +60,10 @@ public class Particle : MonoBehaviour
     public float rho_near = 0.0f;
     public float press = 0.0f;
     public float press_near = 0.0f;
-    public list neighbours = new list();
     public vector3 vel = new vector3(0f, 0f, 0f);
     public vector3 force = new vector3(0f, g * gfactor, 0f);
     public float velocity = 0.0f;
     public vector3 camPos = new Vector3(2.26f, 1.95f, -6.37f);
-
-    // Spatial partitioning position in grid
-    public int grid_x;
-    public int grid_y;
-    public int grid_z;
 
     void Start()
     {
@@ -108,9 +102,6 @@ public class Particle : MonoBehaviour
         rho = 0.0f;
         rho_near = 0.0f;
 
-        // Reset neighbors
-        neighbours = new list();
-
         if (velocity > MAX_VEL) vel = vel / (velocity / MAX_VEL);
 
     }
@@ -118,7 +109,7 @@ public class Particle : MonoBehaviour
     public void UpdateStateAffine(){
 
         transform.position = visual_pos;
-        float scale = (visual_pos.y + 3) / 30f;
+        float scale = (visual_pos.y + 3) / 50f;
         transform.localScale = new vector3 (scale, scale, scale);
 
         transform.LookAt(camPos);
