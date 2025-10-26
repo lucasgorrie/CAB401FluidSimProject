@@ -48,7 +48,7 @@ public class Simulation : MonoBehaviour
     public int grid_size_z;
 
     // Parallelism modifiers
-    public int DoP = 15;  // Degree of Parallelism
+    public int DoP = 10;  // Degree of Parallelism
     public ParallelOptions configuration;
 
     void Start()

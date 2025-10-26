@@ -14,7 +14,11 @@ public class Shower : MonoBehaviour
 {
 
     // Profiling
-    string statsText;
+    string statsText0;
+    string statsText1;
+    string statsText2;
+    string statsText3;
+    string statsText4;
 
     // Get the Simulation object
     public GameObject Simulation;
@@ -71,17 +75,45 @@ public class Shower : MonoBehaviour
         // Profiling
         if (Time.frameCount < 500)
         {
-            var sb = new StringBuilder(500);
-            sb.AppendLine($"Cumulative Frame Count: {Time.frameCount}");
-            sb.AppendLine($"Time: {Time.time}");
-            statsText = sb.ToString();
+            var sb0 = new StringBuilder(500);
+            sb0.AppendLine($"Cumulative Frame Count: {Time.frameCount}");
+            sb0.AppendLine($"Time to 500 frames: {Time.time}");
+            statsText0 = sb0.ToString();
+        }
+        if (Time.frameCount < 400)
+        {
+            var sb1 = new StringBuilder(500);
+            sb1.AppendLine($"Time to 400 frames: {Time.time}");
+            statsText1 = sb1.ToString();
+        }
+        if (Time.frameCount < 300)
+        {
+            var sb2 = new StringBuilder(500);
+            sb2.AppendLine($"Time to 300 frames: {Time.time}");
+            statsText2 = sb2.ToString();
+        }
+        if (Time.frameCount < 200)
+        {
+            var sb3 = new StringBuilder(500);
+            sb3.AppendLine($"Time to 200 frames: {Time.time}");
+            statsText3 = sb3.ToString();
+        }
+        if (Time.frameCount < 100)
+        {
+            var sb4 = new StringBuilder(500);
+            sb4.AppendLine($"Time to 100 frames: {Time.time}");
+            statsText4 = sb4.ToString();
         }
 
     }
 
     void OnGUI()
     {
-        GUI.TextArea(new Rect(10, 30, 250, 50), statsText);
+        GUI.TextArea(new Rect(10, 30, 250, 50), statsText0);
+        GUI.TextArea(new Rect(10, 80, 250, 30), statsText1);
+        GUI.TextArea(new Rect(10, 110, 250, 30), statsText2);
+        GUI.TextArea(new Rect(10, 140, 250, 30), statsText3);
+        GUI.TextArea(new Rect(10, 170, 250, 30), statsText4);
     }
 
 }
