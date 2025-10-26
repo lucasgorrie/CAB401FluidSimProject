@@ -75,7 +75,9 @@ public class Simulation : MonoBehaviour
         grid_size_x = (int)((x_max - x_min) / R) + 1;
         grid_size_y = (int)((y_max - y_min) / R) + 1;
         grid_size_z = (int)((z_max - z_min) / R) + 1;
-        
+
+        CudaDensityHandler.cuda_plugin_init();
+
         CellParticleCounts = new uint[(uint)(grid_size_x * grid_size_y * grid_size_z)];
         Offsets = new uint[(uint)(grid_size_x * grid_size_y * grid_size_z)];
 
@@ -97,62 +99,6 @@ public class Simulation : MonoBehaviour
     }
 
     private float time;
-
-    public void calculate_density()
-    {
-        /*
-            Calculates density of particles
-            Density is calculated by summing the relative distance of neighboring particles
-            We distinguish density and near density to avoid particles to collide with each other
-            which creates instability
-
-        Args:
-            particles (list[Particle]): list of particles
-        */
-
-        // For each particle
-        for(int p = 0; p < particles.Count; p++) {
-
-            vector3 Cell = GetGrid(predicted_positions[p]);
-
-            // for each particle in the 9 neighboring cells in the spatial partitioning grid
-            for (int i = (int) Cell.x - 1; i <= Cell.x + 1; i++)
-            {
-                for (int j = (int) Cell.y - 1; j <= Cell.y + 1; j++)
-                {
-                    for (int k = (int) Cell.z - 1; k <= Cell.z + 1; k++)
-                    {
-                        // If the cell is in the grid
-                        if (i >= 0 && i < grid_size_x && j >= 0 && j < grid_size_y && k >= 0 && k < grid_size_z)
-                        {
-
-                            vector3 gridOffset = new vector3(i - Cell.x, j - Cell.y, k - Cell.z);  // Neighbour cell relative to particle cell
-                            uint hash = HashGrid(Cell + gridOffset);  // Hash of grid to look at for neighbour
-                            uint key = KeyFromHash(hash);
-
-                            // For each neighbour
-                            for (uint q = Offsets[key]; q < ( Offsets[key] + CellParticleCounts[key] ); q++)
-                            {
-
-                                uint nKey = keys[q];
-                                if (nKey != key) break;
-
-                                // Calculate distance between particles
-                                float dist = Vector3.Distance(predicted_positions[p], predicted_positions[q]);
-
-                                if (dist < R)
-                                {
-                                    float normal_distance = 1 - dist / R;
-                                    rhos[p] += normal_distance * normal_distance * 2;
-                                    rhos_near[p] += normal_distance * normal_distance * normal_distance * 2;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     public void create_pressure()
     {
@@ -299,7 +245,23 @@ public class Simulation : MonoBehaviour
         UpdateHashTable();
 
         time = Time.realtimeSinceStartup;
-        calculate_density();
+
+        int ret = CudaDensityHandler.CalculateDensityUsingGPU(
+            predicted_positions, 
+            keys,               
+            Offsets,              
+            CellParticleCounts,  
+            rhos,              
+            rhos_near,        
+            grid_size_x, grid_size_y, grid_size_z,
+            R
+        );
+
+        if (ret != 0)
+        {
+            Debug.LogError("CUDA density kernel returned error: " + ret);
+        }
+
         time = Time.realtimeSinceStartup - time;
         //Debug.Log("Time to calculate density: " + time);
 
@@ -385,7 +347,7 @@ public class Simulation : MonoBehaviour
     // Should be performed after considerations //
     void AddResultsToParticles() {
 
-        for (int i = 0; i < particles.Count; i++) {
+        Parallel.For (0, particles.Count, (i) => {
             particles[i].rho = rhos[i];
             particles[i].rho_near = rhos_near[i];
             particles[i].press = pressures[i];
@@ -393,14 +355,14 @@ public class Simulation : MonoBehaviour
             particles[i].vel = velocities[i];
             particles[i].force = forces[i];
             particles[i].predicted_pos = predicted_positions[i];
-        }
+        });
     
     }
 
     // Should be performed before considerations //
     void AddParticleDetails() {
 
-        for (int i = 0; i < particles.Count; i++) {
+        Parallel.For(0, particles.Count, (i) => {
             rhos[i] = particles[i].rho;
             rhos_near[i] = particles[i].rho_near;
             pressures[i] = particles[i].press;
@@ -408,7 +370,7 @@ public class Simulation : MonoBehaviour
             velocities[i] = particles[i].vel;
             forces[i] = particles[i].force;
             predicted_positions[i] = particles[i].predicted_pos;
-        }
+        });
 
     }
 
