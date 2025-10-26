@@ -5,7 +5,7 @@ using UnityEngine;
 public class Config : MonoBehaviour
 {
     // Simulation parameters
-    public static int N = 6000;            // Number of particles
+    public static int N = 4000;            // Number of particles
     public static float SIM_W = 12f;      // Simulation space width
     public static float BOTTOM = -68f;    // Simulation space ground
     public static float DAM = -0.3f;      // Position of the dam
