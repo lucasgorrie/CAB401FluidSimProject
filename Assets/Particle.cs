@@ -50,8 +50,8 @@ public class Particle : MonoBehaviour
     public static float WALL_POS = Config.WALL_POS;
 
     // Physics variables
-    public static float mass = 1f;
-    public static float GFM = 1f;
+    public static float mass = 0.1f;
+    public static float GFM = 2f;
     public vector3 pos;
     public vector3 previous_pos;
     public vector3 visual_pos;
@@ -121,7 +121,7 @@ public class Particle : MonoBehaviour
 
         if (velocity > MAX_VEL) vel = vel / (velocity / MAX_VEL);
 
-        vector3 camPos = new Vector3(12.55f, 0f, 1.55f);
+        vector3 camPos = new Vector3(2.26f, 1.95f, -6.37f);
         transform.LookAt(camPos);
 
     }
