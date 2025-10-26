@@ -105,7 +105,7 @@ public class Simulation : MonoBehaviour
         */
 
         // For each particle
-        Parallel.For(0, particles.Count, (z) => {
+        Parallel.For(0, particles.Count, configuration, (z) => {
 
             Particle p = particles[z];
 
@@ -154,7 +154,7 @@ public class Simulation : MonoBehaviour
             particles (list[Particle]): list of particles
         */
 
-        Parallel.For(0, particles.Count, (z) => {
+        Parallel.For(0, particles.Count, configuration, (z) => {
 
             Particle p = particles[z];
             pressure_force = vector3.zero;
@@ -186,7 +186,7 @@ public class Simulation : MonoBehaviour
         Args:
             particles (list[Particle]): list of particles
         */
-        Parallel.For(0, particles.Count, (z) => {
+        Parallel.For(0, particles.Count, configuration, (z) => {
 
             Particle p = particles[z];
             foreach (Particle n in p.neighbours) {
@@ -232,7 +232,7 @@ public class Simulation : MonoBehaviour
             }
         }
 
-        Parallel.For(0, particles.Count, (z) => {
+        Parallel.For(0, particles.Count, configuration, (z) => {
 
             Particle p = particles[z];
             // Assign grid_x and grid_y using x_min y_min x_max y_max
@@ -254,7 +254,7 @@ public class Simulation : MonoBehaviour
         
         // Update what we can in a multi-threaded fashion //
         float dt = Time.deltaTime;
-        Parallel.For(0, particles.Count, (z) => {
+        Parallel.For(0, particles.Count, configuration, (z) => {
 
             Particle p = particles[z];
             p.UpdateStateThreadSafe(dt);
@@ -274,7 +274,7 @@ public class Simulation : MonoBehaviour
         //Debug.Log("Time to calculate density: " + time);
 
         time = Time.realtimeSinceStartup;
-        Parallel.For(0, particles.Count, (z) => {
+        Parallel.For(0, particles.Count, configuration, (z) => {
 
             Particle p = particles[z];
             p.CalculatePressure();
