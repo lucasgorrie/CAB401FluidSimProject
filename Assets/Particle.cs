@@ -118,8 +118,8 @@ public class Particle : MonoBehaviour
     public void UpdateStateAffine(){
 
         transform.position = visual_pos;
-        float scale = (visual_pos.y + 3) / 30f;
-        transform.localScale = new vector3 (scale, scale, scale);
+        float scale = (visual_pos.y + 3) / 50f;
+        transform.localScale = new vector3(scale, scale, scale);
 
         transform.LookAt(camPos);
 

@@ -73,7 +73,7 @@ public class Shower : MonoBehaviour
         {
             var sb = new StringBuilder(500);
             sb.AppendLine($"Cumulative Frame Count: {Time.frameCount}");
-            sb.AppendLine($"Cumulative Frame Count: {Time.realtimeSinceStartup}");
+            sb.AppendLine($"Time: {Time.time}");
             statsText = sb.ToString();
         }
 
