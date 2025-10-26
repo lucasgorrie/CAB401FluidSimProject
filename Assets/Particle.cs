@@ -124,6 +124,9 @@ public class Particle : MonoBehaviour
         vector3 camPos = new Vector3(2.26f, 1.95f, -6.37f);
         transform.LookAt(camPos);
 
+        float scale = (visual_pos.y + 3) / 50f;
+        transform.localScale = new vector3(scale, scale, scale);
+
     }
 
     public void CalculatePressure()

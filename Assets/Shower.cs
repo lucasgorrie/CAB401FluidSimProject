@@ -68,10 +68,14 @@ public class Shower : MonoBehaviour
             time = 0.0f;
         }
 
-        // Profiling
-        var sb = new StringBuilder(500);
-        sb.AppendLine($"FPS: {1/Time.deltaTime}");
-        statsText = sb.ToString();
+        // Profiling //
+        if (Time.frameCount < 500) {
+            var sb = new StringBuilder(500);
+            sb.AppendLine($"Cumulative Frame Count: {Time.frameCount}");
+            sb.AppendLine($"Time: {Time.time}");
+            statsText = sb.ToString();
+        }
+
 
     }
 
