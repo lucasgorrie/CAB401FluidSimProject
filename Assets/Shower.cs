@@ -69,7 +69,7 @@ public class Shower : MonoBehaviour
         }
 
         // Profiling //
-        if (Time.frameCount < 300) {
+        if (Time.frameCount < 2000) {
             var sb = new StringBuilder(500);
             sb.AppendLine($"Cumulative Frame Count: {Time.frameCount}");
             sb.AppendLine($"Time: {Time.time}");
