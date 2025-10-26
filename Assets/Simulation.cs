@@ -48,11 +48,13 @@ public class Simulation : MonoBehaviour
     public int grid_size_z;
 
     // Parallelism modifiers
-    public int DoP = 15;  // Degree of Parallelism
+    public int DoP = 1;  // Degree of Parallelism
     public ParallelOptions configuration;
 
     void Start()
     {
+
+        ExplicitThreadScheduler scheduler = new ExplicitThreadScheduler(DoP);
 
         // Set grid size so that it is roughly equal to R
         grid_size_x = (int)((x_max - x_min) / R) + 1;
@@ -70,7 +72,7 @@ public class Simulation : MonoBehaviour
                     grid[i, j, k] = new list();
                 }
 
-        configuration = new ParallelOptions { MaxDegreeOfParallelism = DoP };
+        configuration = new ParallelOptions { TaskScheduler = scheduler };
 
     }
 
